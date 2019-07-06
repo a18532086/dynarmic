@@ -26,7 +26,11 @@ std::optional<std::reference_wrapper<const VFP2Matcher<V>>> DecodeVFP2(u32 instr
     static const std::vector<VFP2Matcher<V>> table = {
 
 #define INST(fn, name, bitstring) Decoder::detail::detail<VFP2Matcher<V>>::GetMatcher(&V::fn, name, bitstring),
+#ifdef ARCHITECTURE_Aarch64
+#include "vfp2_a64.inc"
+#else
 #include "vfp2.inc"
+#endif
 #undef INST
 
     };
