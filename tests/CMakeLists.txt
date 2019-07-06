@@ -25,9 +25,9 @@ add_executable(dynarmic_tests
     A32/test_arm_disassembler.cpp
     A32/test_thumb_instructions.cpp
     A32/testenv.h
-    A64/a64.cpp
-    A64/testenv.h
-    cpu_info.cpp
+    # A64/a64.cpp
+    # A64/testenv.h
+    # cpu_info.cpp
     fp/FPToFixed.cpp
     fp/FPValue.cpp
     fp/mantissa_util_tests.cpp
@@ -36,6 +36,14 @@ add_executable(dynarmic_tests
     mp.cpp
     rand_int.h
 )
+
+if (ARCHITECTURE_x86_64)
+    target_sources(dynarmic_tests PRIVATE
+	    A64/a64.cpp
+		A64/testenv.h
+		cpu_info.cpp
+    )
+endif()
 
 if (DYNARMIC_TESTS_USE_UNICORN)
     target_sources(dynarmic_tests PRIVATE
@@ -58,9 +66,17 @@ add_executable(dynarmic_print_info
 
 include(CreateDirectoryGroups)
 create_target_directory_groups(dynarmic_tests)
-create_target_directory_groups(dynarmic_print_info)
 
-target_link_libraries(dynarmic_tests PRIVATE dynarmic boost catch fmt xbyak)
+if (ARCHITECTURE_x86_64)
+create_target_directory_groups(dynarmic_print_info)
+endif()
+
+target_link_libraries(dynarmic_tests PRIVATE dynarmic boost catch fmt)
+
+if (ARCHITECTURE_x86_64)
+    target_link_libraries(dynarmic_tests PRIVATE xbyak)
+endif()
+
 target_include_directories(dynarmic_tests PRIVATE . ../src)
 target_compile_options(dynarmic_tests PRIVATE ${DYNARMIC_CXX_FLAGS})
 
