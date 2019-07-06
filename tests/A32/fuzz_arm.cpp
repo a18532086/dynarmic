@@ -468,7 +468,7 @@ TEST_CASE("VFP: VCMP", "[JitX64][.vfp][A32]") {
     });
 }
 
-TEST_CASE("Fuzz ARM data processing instructions", "[JitX64][A32]") {
+TEST_CASE("Fuzz ARM data processing instructions", "[JitX64][JitA64][A32]") {
     const std::array<InstructionGenerator, 16> imm_instructions = {{
         InstructionGenerator("cccc0010101Snnnnddddrrrrvvvvvvvv"),
         InstructionGenerator("cccc0010100Snnnnddddrrrrvvvvvvvv"),
@@ -591,7 +591,7 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64][A32]") {
     }
 }
 
-TEST_CASE("Fuzz ARM load/store instructions (byte, half-word, word)", "[JitX64][A32]") {
+TEST_CASE("Fuzz ARM load/store instructions (byte, half-word, word)", "[JitX64][JitA64][A32]") {
     auto EXD_valid = [](u32 inst) -> bool {
         return Bits<0, 3>(inst) % 2 == 0 && Bits<0, 3>(inst) != 14 && Bits<12, 15>(inst) != (Bits<0, 3>(inst) + 1);
     };
@@ -690,7 +690,7 @@ TEST_CASE("Fuzz ARM load/store instructions (byte, half-word, word)", "[JitX64][
     }
 }
 
-TEST_CASE("Fuzz ARM load/store multiple instructions", "[JitX64][A32]") {
+TEST_CASE("Fuzz ARM load/store multiple instructions", "[JitX64][JitA64][A32]") {
     const std::array<InstructionGenerator, 2> instructions = {{
         InstructionGenerator("cccc100pu0w1nnnnxxxxxxxxxxxxxxxx"), // LDM
         InstructionGenerator("cccc100pu0w0nnnnxxxxxxxxxxxxxxxx"), // STM
@@ -731,7 +731,7 @@ TEST_CASE("Fuzz ARM load/store multiple instructions", "[JitX64][A32]") {
     FuzzJitArm(1, 1, 10000, instruction_select);
 }
 
-TEST_CASE("Fuzz ARM branch instructions", "[JitX64][A32]") {
+TEST_CASE("Fuzz ARM branch instructions", "[JitX64][JitA64][A32]") {
     const std::array<InstructionGenerator, 6> instructions = {{
         InstructionGenerator("1111101hvvvvvvvvvvvvvvvvvvvvvvvv"),
         InstructionGenerator("cccc000100101111111111110011mmmm",
@@ -746,7 +746,7 @@ TEST_CASE("Fuzz ARM branch instructions", "[JitX64][A32]") {
     });
 }
 
-TEST_CASE("Fuzz ARM reversal instructions", "[JitX64][A32]") {
+TEST_CASE("Fuzz ARM reversal instructions", "[JitX64][JitA64][A32]") {
     const auto is_valid = [](u32 instr) -> bool {
         // R15 is UNPREDICTABLE
         return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111;
@@ -802,7 +802,7 @@ TEST_CASE("Fuzz ARM extension instructions", "[JitX64][A32]") {
     }
 }
 
-TEST_CASE("Fuzz ARM multiply instructions", "[JitX64][A32]") {
+TEST_CASE("Fuzz ARM multiply instructions", "[JitX64][JitA64][A32]") {
     auto validate_d_m_n = [](u32 inst) -> bool {
         return Bits<16, 19>(inst) != 15 &&
                Bits<8, 11>(inst) != 15 &&
@@ -837,6 +837,7 @@ TEST_CASE("Fuzz ARM multiply instructions", "[JitX64][A32]") {
         InstructionGenerator("cccc01110101dddd1111mmmm00R1nnnn", validate_d_m_n),   // SMMUL
         InstructionGenerator("cccc01110101ddddaaaammmm00R1nnnn", validate_d_a_m_n), // SMMLA
         InstructionGenerator("cccc01110101ddddaaaammmm11R1nnnn", validate_d_a_m_n), // SMMLS
+
         InstructionGenerator("cccc01110000ddddaaaammmm00M1nnnn", validate_d_a_m_n), // SMLAD
         InstructionGenerator("cccc01110100ddddaaaammmm00M1nnnn", validate_h_l_m_n), // SMLALD
         InstructionGenerator("cccc01110000ddddaaaammmm01M1nnnn", validate_d_a_m_n), // SMLSD
@@ -998,7 +999,7 @@ TEST_CASE("Fuzz ARM sum of absolute differences", "[JitX64][A32]") {
     }
 }
 
-TEST_CASE("SMUAD", "[JitX64][A32]") {
+TEST_CASE("SMUAD", "[JitX64][JitA64][A32]") {
     ArmTestEnv test_env;
     Dynarmic::A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
@@ -1049,7 +1050,7 @@ TEST_CASE("VFP: VPUSH, VPOP", "[JitX64][.vfp][A32]") {
     });
 }
 
-TEST_CASE("Test ARM misc instructions", "[JitX64][A32]") {
+TEST_CASE("Test ARM misc instructions", "[JitX64][JitA64][A32]") {
     const auto is_clz_valid = [](u32 instr) -> bool {
         // R15 as Rd, or Rm is UNPREDICTABLE
         return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111;
@@ -1064,7 +1065,7 @@ TEST_CASE("Test ARM misc instructions", "[JitX64][A32]") {
     }
 }
 
-TEST_CASE("Test ARM MSR instructions", "[JitX64][A32]") {
+TEST_CASE("Test ARM MSR instructions", "[JitX64][JitA64][A32]") {
     const auto is_msr_valid = [](u32 instr) -> bool {
         return Bits<16, 19>(instr) != 0;
     };

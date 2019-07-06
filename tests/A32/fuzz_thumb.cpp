@@ -195,7 +195,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
     }
 }
 
-TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
+TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][JitA64][Thumb]") {
     const std::array<ThumbInstGen, 25> instructions = {{
         ThumbInstGen("00000xxxxxxxxxxx"), // LSL <Rd>, <Rm>, #<imm5>
         ThumbInstGen("00001xxxxxxxxxxx"), // LSR <Rd>, <Rm>, #<imm5>
@@ -247,7 +247,7 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
     }
 }
 
-TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb]") {
+TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][JitA64][Thumb]") {
     const std::array<ThumbInstGen, 8> instructions = {{
         ThumbInstGen("01000111xmmmm000",  // BLX/BX
                      [](u16 inst){
