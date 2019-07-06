@@ -503,6 +503,7 @@ public:
     virtual ~ARM64XEmitter() {
     }
   void SetCodePtr(u8* ptr);
+  void SetCodePtr_u8(u8* ptr);
   void SetCodePtrUnsafe(u8* ptr);
   void ReserveCodeSpace(u32 bytes);
   const u8* AlignCode16();

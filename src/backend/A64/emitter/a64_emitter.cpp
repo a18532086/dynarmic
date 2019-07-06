@@ -287,6 +287,12 @@ void ARM64XEmitter::SetCodePtr(u8* ptr) {
     m_lastCacheFlushEnd = ptr;
 }
 
+
+void ARM64XEmitter::SetCodePtr_u8(u8* ptr) {
+    SetCodePtrUnsafe(ptr);
+    m_lastCacheFlushEnd = ptr;
+}
+
 const u8* ARM64XEmitter::GetCodePtr() const {
     return m_code;
 }
