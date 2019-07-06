@@ -69,7 +69,7 @@ public:
     // it'll do the job.
     void FreeCodeSpace() {
         ASSERT(!m_is_child);
-        ASSERT(munmap(region, total_region_size) != 0);
+        ASSERT(munmap(region, total_region_size) == 0);
         region = nullptr;
         region_size = 0;
         total_region_size = 0;
