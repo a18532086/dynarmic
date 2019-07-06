@@ -876,10 +876,10 @@ public:
   }
 
   // Plain function call
-    void QuickCallFunction(ARM64Reg scratchreg, const void* func);
+  void QuickCallFunction(const void* func, ARM64Reg scratchreg = X16);
   template <typename T>
-    void QuickCallFunction(ARM64Reg scratchreg, T func) {
-        QuickCallFunction(scratchreg, (const void*)func);
+  void QuickCallFunction(T func, ARM64Reg scratchreg = X16) {
+    QuickCallFunction((const void*)func, scratchreg);
   }
 };
 

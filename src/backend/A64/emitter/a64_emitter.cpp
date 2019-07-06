@@ -1011,7 +1011,7 @@ void ARM64XEmitter::BL(const void* ptr) {
     EncodeUnconditionalBranchInst(1, ptr);
 }
 
-void ARM64XEmitter::QuickCallFunction(ARM64Reg scratchreg, const void* func) {
+void ARM64XEmitter::QuickCallFunction(const void* func, ARM64Reg scratchreg) {
     s64 distance = reinterpret_cast<s64>(func) - reinterpret_cast<s64>(m_code);
     distance >>= 2; // Can only branch to opcode-aligned (4) addresses
     if (!IsInRangeImm26(distance)) {
