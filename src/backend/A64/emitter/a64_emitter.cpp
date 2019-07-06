@@ -863,7 +863,7 @@ void ARM64XEmitter::SetJumpTarget(FixupBranch const& branch) {
     switch (branch.type) {
     case 1: // CBNZ
         Not = true;
-        __attribute__((fallthrough));
+            __attribute__((fallthrough));
     case 0: // CBZ
     {
         ASSERT_MSG(IsInRangeImm19(distance), "%s(%d): Received too large distance: %" PRIx64,
@@ -879,7 +879,7 @@ void ARM64XEmitter::SetJumpTarget(FixupBranch const& branch) {
         break;
     case 4: // TBNZ
         Not = true;
-        __attribute__((fallthrough));
+            __attribute__((fallthrough));
     case 3: // TBZ
     {
         ASSERT_MSG(IsInRangeImm14(distance), "%s(%d): Received too large distance: %" PRIx64,
@@ -1838,64 +1838,77 @@ bool ARM64XEmitter::MOVI2R2(ARM64Reg Rd, u64 imm1, u64 imm2) {
     return element;
 }
 
-void ARM64XEmitter::ABI_PushRegisters(std::bitset<32> registers) {
-    auto num_regs = registers.count();
-    s32 stack_size = static_cast<s32>((num_regs + (num_regs & 1)) * 8);
-    unsigned int it = 0;
+void ARM64XEmitter::ABI_PushRegisters(u32 registers) {
+    int num_regs = Common::BitCount(registers);
+    int stack_size = (num_regs + (num_regs & 1)) * 8;
+    int it = 0;
+
+    ARM64Reg gpr[32]{};
 
     if (!num_regs)
         return;
 
-    // 8 byte per register, but 16 byte alignment, so we may have to padd one
-    // register. Only update the SP on the last write to avoid the dependency
-    // between those stores.
+    for (int i = 0; i < 32; ++i) {
+        if (Common::Bit(i, registers)) {
+            gpr[it++] = static_cast<ARM64Reg> (X0 + i);
+        }
+    }
 
-    // The first push must adjust the SP, else a context switch may invalidate
-    // everything below SP.
-    if (num_regs & 1) {
-        STR(INDEX_PRE, static_cast<ARM64Reg>(X0 + registers[it++]), SP, -stack_size);
-    } else {
-        STP(INDEX_PRE, static_cast<ARM64Reg>(X0 + registers[it]),
-            static_cast<ARM64Reg>(X0 + registers[it + 1]), SP, -stack_size);
+    // 8 byte per register, but 16 byte alignment, so we may have to padd one register.
+    // Only update the SP on the last write to avoid the dependency between those stores.
+
+    // The first push must adjust the SP, else a context switch may invalidate everything below SP.
+
+    it = 0;
+    if (num_regs & 1){
+        STR(INDEX_PRE, gpr[0], SP, -stack_size);
+        it++;
+    }
+    else {
+        STP(INDEX_PRE, gpr[0], gpr[1], SP, -stack_size);
         it += 2;
     }
 
     // Fast store for all other registers, this is always an even number.
-    // Fast store for all other registers, this is always an even number.
-    for (unsigned int i = 0; i < (num_regs - 1) / 2; i++) {
-        STP(INDEX_SIGNED, static_cast<ARM64Reg>(X0 + registers[it]),
-            static_cast<ARM64Reg>(X0 + registers[it + 1]), SP, 16 * (i + 1));
-        it += 2;
-    }
-    ASSERT_MSG(it == registers.count(), "%s registers don't match.", __func__);
+    for (int i = 0; i < (num_regs - 1) / 2; i++) {
+        STP(INDEX_SIGNED, gpr[it], gpr[it+1], SP, 16 * (i + 1));
+		it += 2;
+	}
+
+    ASSERT_MSG(it == num_regs, "%s registers don't match.", __func__);
 }
 
-void ARM64XEmitter::ABI_PopRegisters(std::bitset<32> registers) {
-    u32 num_regs = static_cast<u32>(registers.count());
+void ARM64XEmitter::ABI_PopRegisters(u32 registers) {
+    u8 num_regs = static_cast<u8>(Common::BitCount(registers));
     int stack_size = (num_regs + (num_regs & 1)) * 8;
-    unsigned int it = 0;
+    int it = 0;
+
+    ARM64Reg gpr[32]{};
 
     if (!num_regs)
         return;
 
-    // We must adjust the SP in the end, so load the first (two) registers at
-    // least.
-    ARM64Reg first = static_cast<ARM64Reg>(X0 + registers[it++]);
-    ARM64Reg second = static_cast<ARM64Reg>(0);
-    if (!(num_regs & 1))
-        second = static_cast<ARM64Reg>(X0 + registers[it++]);
-
-    // 8 byte per register, but 16 byte alignment, so we may have to padd one
-    // register. Only update the SP on the last load to avoid the dependency
-    // between those loads.
-
-    // Fast load for all but the first (two) registers, this is always an even
-    // number.
-    for (unsigned int i = 0; i < (num_regs - 1) / 2; i++) {
-        LDP(INDEX_SIGNED, static_cast<ARM64Reg>(X0 + registers[it]),
-            static_cast<ARM64Reg>(X0 + registers[it + 1]), SP, 16 * (i + 1));
-        it += 2;
+    for (int i = 0; i < 32; ++i) {
+        if (Common::Bit(i, registers)) {
+            gpr[it++] = (ARM64Reg) (X0 + i);
+        }
     }
+    it = 0;
+    // We must adjust the SP in the end, so load the first (two) registers at least.
+    ARM64Reg first = gpr[it++];
+    ARM64Reg second = INVALID_REG;
+    if (!(num_regs & 1))
+        second = gpr[it++];
+
+    // 8 byte per register, but 16 byte alignment, so we may have to padd one register.
+    // Only update the SP on the last load to avoid the dependency between those loads.
+
+    // Fast load for all but the first (two) registers, this is always an even number.
+
+    for (int i = 0; i < (num_regs - 1) / 2; ++i) {
+        LDP(INDEX_SIGNED, gpr[it], gpr[it+1], SP, 16 * (i + 1));
+        it+=2;
+	}
 
     // Post loading the first (two) registers.
     if (num_regs & 1)
@@ -1903,7 +1916,7 @@ void ARM64XEmitter::ABI_PopRegisters(std::bitset<32> registers) {
     else
         LDP(INDEX_POST, first, second, SP, stack_size);
 
-    ASSERT_MSG(it == registers.count(), "%s registers don't match.", __func__);
+    ASSERT_MSG(it == num_regs, "%s registers don't match.", __func__);
 }
 
 // Float Emitter
@@ -3332,15 +3345,15 @@ void ARM64FloatEmitter::BIC(u8 size, ARM64Reg Rd, u8 imm, u8 shift) {
     EncodeModImm(Q, op, cmode, 0, Rd, imm);
 }
 
-void ARM64FloatEmitter::ABI_PushRegisters(std::bitset<32> registers, ARM64Reg tmp) {
+void ARM64FloatEmitter::ABI_PushRegisters(u32 registers, ARM64Reg tmp) {
     bool bundled_loadstore = false;
 
     for (int i = 0; i < 32; ++i) {
-        if (!registers[i])
+        if (!Common::Bit(i, registers))
             continue;
 
         int count = 0;
-        while (++count < 4 && (i + count) < 32 && registers[i + count]) {
+        while (++count < 4 && (i + count) < 32 && Common::Bit(i + count, registers)) {
         }
         if (count > 1) {
             bundled_loadstore = true;
@@ -3349,28 +3362,28 @@ void ARM64FloatEmitter::ABI_PushRegisters(std::bitset<32> registers, ARM64Reg tm
     }
 
     if (bundled_loadstore && tmp != INVALID_REG) {
-        u32 num_regs = static_cast<u32>(registers.count());
+        int num_regs = Common::BitCount(registers);
         m_emit->SUB(SP, SP, num_regs * 16);
         m_emit->ADD(tmp, SP, 0);
         std::vector<ARM64Reg> island_regs;
         for (int i = 0; i < 32; ++i) {
-            if (!registers[i])
+            if (!Common::Bit(i, registers))
                 continue;
 
-            u8 count = 0;
+            int count = 0;
 
             // 0 = true
             // 1 < 4 && registers[i + 1] true!
             // 2 < 4 && registers[i + 2] true!
             // 3 < 4 && registers[i + 3] true!
             // 4 < 4 && registers[i + 4] false!
-            while (++count < 4 && (i + count) < 32 && registers[i + count]) {
+            while (++count < 4 && (i + count) < 32 && Common::Bit(i + count, registers)) {
             }
 
             if (count == 1)
-                island_regs.push_back(static_cast<ARM64Reg>(Q0 + i));
+                island_regs.push_back((ARM64Reg)(Q0 + i));
             else
-                ST1(64, count, INDEX_POST, static_cast<ARM64Reg>(Q0 + i), tmp);
+                ST1(64, count, INDEX_POST, (ARM64Reg)(Q0 + i), tmp);
 
             i += count - 1;
         }
@@ -3388,28 +3401,29 @@ void ARM64FloatEmitter::ABI_PushRegisters(std::bitset<32> registers, ARM64Reg tm
             STR(128, INDEX_POST, pair_regs[0], tmp, 16);
     } else {
         std::vector<ARM64Reg> pair_regs;
-        for (size_t i = 0; i < registers.count(); ++i) {
-            auto it = registers[i];
-            pair_regs.push_back(static_cast<ARM64Reg>(Q0 + it));
-            if (pair_regs.size() == 2) {
-                STP(128, INDEX_PRE, pair_regs[0], pair_regs[1], SP, -32);
-                pair_regs.clear();
+        for (int i = 0; i < 32; ++i) {
+            if (Common::Bit(i, registers)) {
+                pair_regs.push_back((ARM64Reg)(Q0 + i));
+                if (pair_regs.size() == 2) {
+                    STP(128, INDEX_PRE, pair_regs[0], pair_regs[1], SP, -32);
+                    pair_regs.clear();
+                }
             }
         }
         if (pair_regs.size())
             STR(128, INDEX_PRE, pair_regs[0], SP, -16);
     }
 }
-void ARM64FloatEmitter::ABI_PopRegisters(std::bitset<32> registers, ARM64Reg tmp) {
+void ARM64FloatEmitter::ABI_PopRegisters(u32 registers, ARM64Reg tmp) {
     bool bundled_loadstore = false;
-    auto num_regs = registers.count();
+    int num_regs = Common::BitCount(registers);
 
     for (int i = 0; i < 32; ++i) {
-        if (!registers[i])
+        if (!Common::Bit(i, registers))
             continue;
 
         int count = 0;
-        while (++count < 4 && (i + count) < 32 && registers[i + count]) {
+        while (++count < 4 && (i + count) < 32 && Common::Bit(i + count, registers)) {
         }
         if (count > 1) {
             bundled_loadstore = true;
@@ -3418,15 +3432,14 @@ void ARM64FloatEmitter::ABI_PopRegisters(std::bitset<32> registers, ARM64Reg tmp
     }
 
     if (bundled_loadstore && tmp != INVALID_REG) {
-        // The temporary register is only used to indicate that we can use this code
-        // path
+        // The temporary register is only used to indicate that we can use this code path
         std::vector<ARM64Reg> island_regs;
         for (int i = 0; i < 32; ++i) {
-            if (!registers[i])
+            if (!Common::Bit(i, registers))
                 continue;
 
             u8 count = 0;
-            while (++count < 4 && (i + count) < 32 && registers[i + count]) {
+            while (++count < 4 && (i + count) < 32 && Common::Bit(i + count, registers)) {
             }
 
             if (count == 1)
@@ -3452,7 +3465,7 @@ void ARM64FloatEmitter::ABI_PopRegisters(std::bitset<32> registers, ARM64Reg tmp
         bool odd = num_regs % 2;
         std::vector<ARM64Reg> pair_regs;
         for (int i = 31; i >= 0; --i) {
-            if (!registers[i])
+            if (!Common::Bit(i, registers))
                 continue;
 
             if (odd) {

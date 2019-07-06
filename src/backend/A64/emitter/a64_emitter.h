@@ -850,8 +850,8 @@ public:
   bool TryEORI2R(ARM64Reg Rd, ARM64Reg Rn, u32 imm);
 
   // ABI related
-    void ABI_PushRegisters(std::bitset<32> registers);
-    void ABI_PopRegisters(std::bitset<32> registers);
+  void ABI_PushRegisters(u32 registers);
+  void ABI_PopRegisters(u32 registers);
 
   // Utility to generate a call to a std::function object.
   //
@@ -1057,8 +1057,8 @@ public:
   void MOVI2FDUP(ARM64Reg Rd, float value, ARM64Reg scratch = INVALID_REG);
 
   // ABI related
-    void ABI_PushRegisters(std::bitset<32> registers, ARM64Reg tmp = INVALID_REG);
-    void ABI_PopRegisters(std::bitset<32> registers, ARM64Reg tmp = INVALID_REG);
+    void ABI_PushRegisters(u32 registers, ARM64Reg tmp = INVALID_REG);
+    void ABI_PopRegisters(u32 registers, ARM64Reg tmp = INVALID_REG);
 
 private:
   ARM64XEmitter* m_emit;
@@ -1110,7 +1110,7 @@ private:
   void UXTL(u8 src_size, ARM64Reg Rd, ARM64Reg Rn, bool upper);
 };
 
-class ARM64CodeBlock : public Dynarmic::BackendA64::CodeBlock<ARM64XEmitter> {
+class ARM64CodeBlock : public CodeBlock<ARM64XEmitter> {
 private:
     void PoisonMemory() override {
         // If our memory isn't a multiple of u32 then this won't write the last
