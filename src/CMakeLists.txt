@@ -287,13 +287,17 @@ target_link_libraries(dynarmic
         boost
     PRIVATE
         fmt::fmt
-        xbyak
         $<$<BOOL:DYNARMIC_USE_LLVM>:${llvm_libs}>
 )
 
 if(ANDROID)
     target_link_libraries(dynarmic PRIVATE log)
     endif()
+
+if (ARCHITECTURE_x86_64)
+    target_link_libraries(dynarmic PRIVATE xbyak)
+endif()
+
 if (DYNARMIC_ENABLE_CPU_FEATURE_DETECTION)
     target_compile_definitions(dynarmic PRIVATE DYNARMIC_ENABLE_CPU_FEATURE_DETECTION=1)
 endif()
@@ -304,4 +308,8 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_compile_definitions(dynarmic PRIVATE FMT_USE_WINDOWS_H=0)
 endif()
 
-export(TARGETS dynarmic boost fmt xbyak FILE "dynarmic-config.cmake")
+export(TARGETS dynarmic boost fmt FILE "dynarmic-config.cmake")
+
+if (ARCHITECTURE_x86_64)
+    export(TARGETS xbyak FILE "dynarmic-config.cmake")
+endif()
