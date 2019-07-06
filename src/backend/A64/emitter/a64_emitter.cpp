@@ -324,7 +324,7 @@ void ARM64XEmitter::FlushIcache() {
     m_lastCacheFlushEnd = m_code;
 }
 
-void ARM64XEmitter::FlushIcacheSection(u8* start, u8* end) {
+void ARM64XEmitter::FlushIcacheSection(const u8* start, const u8* end) {
     if (start == end)
         return;
 
