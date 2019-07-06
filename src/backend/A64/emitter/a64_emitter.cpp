@@ -863,7 +863,11 @@ void ARM64XEmitter::SetJumpTarget(FixupBranch const& branch) {
     switch (branch.type) {
     case 1: // CBNZ
         Not = true;
+#if defined(__clang__)
+            [[clang::fallthrough]];
+#elif defined(__GNUC__)
             __attribute__((fallthrough));
+#endif
     case 0: // CBZ
     {
         ASSERT_MSG(IsInRangeImm19(distance), "%s(%d): Received too large distance: %" PRIx64,
@@ -879,7 +883,11 @@ void ARM64XEmitter::SetJumpTarget(FixupBranch const& branch) {
         break;
     case 4: // TBNZ
         Not = true;
+#if defined(__clang__)
+            [[clang::fallthrough]];
+#elif defined(__GNUC__)
             __attribute__((fallthrough));
+#endif
     case 3: // TBZ
     {
         ASSERT_MSG(IsInRangeImm14(distance), "%s(%d): Received too large distance: %" PRIx64,
