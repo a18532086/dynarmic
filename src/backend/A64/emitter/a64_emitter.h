@@ -317,11 +317,12 @@ struct FixupBranch {
   ARM64Reg reg;
 };
 
+// The only system registers accessible from EL0 (user space) 
 enum PStateField {
   FIELD_SPSel = 0,
   FIELD_DAIFSet,
   FIELD_DAIFClr,
-    FIELD_NZCV, // The only system registers accessible from EL0 (user space)
+  FIELD_NZCV,  
   FIELD_PMCR_EL0,
   FIELD_PMCCNTR_EL0,
   FIELD_FPCR = 0x340,
@@ -443,7 +444,7 @@ public:
       return (m_shifttype << 22) | (m_shift << 10);
       break;
     default:
-            DEBUG_ASSERT_MSG(false, "Invalid type in GetData");
+            ASSERT_MSG(false, "Invalid type in GetData");
       break;
     }
     return 0;

@@ -754,6 +754,8 @@ void ARM64XEmitter::EncodeBitfieldMOVInst(u32 op, ARM64Reg Rd, ARM64Reg Rn, u32 
 
 void ARM64XEmitter::EncodeLoadStoreRegisterOffset(u32 size, u32 opc, ARM64Reg Rt, ARM64Reg Rn,
                                                   ArithOption Rm) {
+    ASSERT_MSG(Rm.GetType() == ArithOption::TYPE_EXTENDEDREG, "Shifted registers are not supported used Indexed registers");
+
     Rt = DecodeReg(Rt);
     Rn = DecodeReg(Rn);
     ARM64Reg decoded_Rm = DecodeReg(Rm.GetReg());
