@@ -652,7 +652,7 @@ void ARM64XEmitter::EncodeLoadRegisterInst(u32 bitop, ARM64Reg Rt, u32 imm) {
     bool b64Bit = Is64Bit(Rt);
     bool bVec = IsVector(Rt);
 
-    ASSERT_MSG(!(imm & 0xFFFFF), "%s: offset too large %d", __func__, imm);
+    ASSERT_MSG(!(imm & ~0xFFFFF), "%s: offset too large %d", __func__, imm);
 
     Rt = DecodeReg(Rt);
     if (b64Bit && bitop != 0x2) // LDRSW(0x2) uses 64bit reg, doesn't have 64bit bit set
