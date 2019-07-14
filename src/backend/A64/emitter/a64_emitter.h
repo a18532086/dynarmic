@@ -497,9 +497,9 @@ public:
     ARM64XEmitter() : m_code(nullptr), m_lastCacheFlushEnd(nullptr) {
     }
     ARM64XEmitter(u8* code_ptr) {
-      m_code = code_ptr;
-      m_lastCacheFlushEnd = code_ptr;
-    }
+    m_code = code_ptr;
+    m_lastCacheFlushEnd = code_ptr;
+  }
 
     virtual ~ARM64XEmitter() {
     }
