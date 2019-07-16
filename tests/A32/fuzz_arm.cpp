@@ -95,10 +95,17 @@ private:
 } // namespace
 
 using WriteRecords = std::map<u32, u8>;
-
+static bool CmpIgnoreSignedZeros(std::array <u32, 64> a, std::array <u32, 64> b) {
+    bool res = true;
+    for (int i = 0; i < 64; i++) {
+        res &= !(a[i] & 0x7FFFFFFF) && !(b[i] & 0x7FFFFFFF) ? true : a[i] == b[i];
+    }
+    return res;
+}
 static bool DoesBehaviorMatch(const ARMul_State& interp, const Dynarmic::A32::Jit& jit, const WriteRecords& interp_write_records, const WriteRecords& jit_write_records) {
     return interp.Reg == jit.Regs()
-           && interp.ExtReg == jit.ExtRegs()
+           //&& interp.ExtReg == jit.ExtRegs()
+           && CmpIgnoreSignedZeros(interp.ExtReg, jit.ExtRegs())
            && interp.Cpsr == jit.Cpsr()
            //&& interp.VFP[VFP_FPSCR] == jit.Fpscr()
            && interp_write_records == jit_write_records;
@@ -468,6 +475,20 @@ TEST_CASE("VFP: VCMP", "[JitX64][JitA64][.vfp][A32]") {
     FuzzJitArm(5, 6, 10000, [&instructions]() -> u32 {
         return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
     });
+}
+
+TEST_CASE("VFP: VABS, VNEG & VSQRT", "[JitX64][JitA64][.vfp][A32]") {
+    const std::array<InstructionGenerator, 3> instructions = { {
+        InstructionGenerator("cccc11101D110000dddd101z11M0mmmm"), // VABS
+        InstructionGenerator("cccc11101D110001dddd101z01M0mmmm"), // VNEG
+        InstructionGenerator("cccc11101D110001dddd101z11M0mmmm"), // VSQRT
+    } };
+
+    SECTION("single instructions") {
+        FuzzJitArm(1, 2, 10000, [&instructions]() -> u32 {
+            return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
+        });
+    }
 }
 
 TEST_CASE("Fuzz ARM data processing instructions", "[JitX64][JitA64][A32]") {
